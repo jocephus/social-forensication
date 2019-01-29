@@ -1,0 +1,1513 @@
+------------------------------------------------------------------
+Title: Windows Service Registry Values Can be Changed By Untrusted Users
+
+[ description ]
+
+Configuration information for Windows Service is stored in the registry. Some of the keys were found to have the KEY_SET_VALUE permission granted for non-administrative users. It would be possible for these users to maliciously modify the registry to change the executable run to a malicious one, or to make the service run with higher privileges. It could lead to a low-privileged user escalating privilges to local administrator.
+
+The registry keys below had KEY_SET_VALUE granted for non-administrative users:
+
+    Extensible Authentication Protocol (Eaphost) uses registry key HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Eaphost:
+    HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Eaphost: ALLOW [unknown]\S-1-5-21-1816462925-3706205934-1807523569-500: KEY_SET_VALUE
+
+[ recommendation ]
+
+Change the permissions of registry keys pertaining to Windows Servies. Service registry keys should never allow KEY_SET_VALUE for low-privileged users.
+
+------------------------------------------------------------------
+Title: Insecure (Non-NTFS) File System Used
+
+[ description ]
+
+Some local drives use Non-NTFS file systems. These drive therefore don't allow secure file permissions to be used. Any local user can change any data on these drives.
+
+The following drives use Non-NTFS file systems:
+
+    Drive Z:\ has PrlSF filesystem
+
+[ recommendation ]
+
+Use NTFS filesystems instead of FAT. Ensure that strong file permissions are set - NTFS file permissions are insecure by default after FAT file systems are converted.
+
+------------------------------------------------------------------
+Title: User Password Not Required
+
+[ description ]
+
+TODO UF_PASSWD_NOTREQD was set for some accounts that were neither locked nor disabled
+
+The following users are affected:
+
+    JOEGRAY158D\joegray
+    JOEGRAY158D\test
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: User Access Control Setting Allows Malware to Elevate Without Prompt
+
+[ description ]
+
+The security policy setting 'User Account Control: Behavior of the elevation prompt for administrators in Admin Approval Mode' is set to 'Elevate without prompting' or 'Prompt for consent for non-Windows binaries' (default). This allows malicious programs to elevate without the user agreeing. Metasploit and other free tools can perform such escalation.
+
+The following registry key shows the current policy setting:
+
+    Reg key: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\ConsentPromptBehaviorAdmin, Value: 5
+
+[ recommendation ]
+
+Alter security policy to 'Prompt for consent' or stronger setting.
+
+------------------------------------------------------------------
+Title: Non-Admin Can Change File Paths In Registry
+
+[ description ]
+
+A walk of the registry found some registry keys that can be changed by non-admin users (KEY_SET_VALUE permission). The data in some of those keys appears to be a file or directory path (e.g. c:\..., \host\share, \.\pipe\...). This is a simple regular-expression match so may report false positives. In some instances it may be possible for an low-privilged user to cause other users to follow a malicious UNC file path, forcing disclosure of their netntlm password hash or SMB relay attack. Other path-based attacks may also be possible.
+
+The following registry value are affected:
+
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SystemRoot has data ''C:\\Windows'' and permissions:
+    ALLOW NT SERVICE\sppsvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\PathName has data ''C:\\Windows'' and permissions:
+    ALLOW NT SERVICE\sppsvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\MirrorCompatBinaryExtension has data ''%SystemRoot%\\System32\\MirrorDrvCompat.dll'' and permissions:
+    ALLOW NT AUTHORITY\LOCAL SERVICE: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Search\InstallDirectory has data ''%systemroot%\\system32\\'' and permissions:
+    ALLOW NT SERVICE\WSearch: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Search\InstallDirectory\ has data ''%systemroot%\\system32\\'' and permissions:
+    ALLOW NT SERVICE\WSearch: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Parallels\Parallels Tools\InstallLocation has data ''C:\\Program Files (x86)\\Parallels\\Parallels Tools\\'' and permissions:
+    ALLOW NT AUTHORITY\INTERACTIVE: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CID\92e8198a-44ac-494d-bc7a-0e3030d5f5b9\CustomProperties\LOG\Path\ has data ''C:\\Windows\\system32\\MSDtc'' and permissions:
+    ALLOW NT SERVICE\MSDTC: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CID\92e8198a-44ac-494d-bc7a-0e3030d5f5b9\CustomProperties\Service\Path\ has data ''C:\\Windows\\system32'' and permissions:
+    ALLOW NT SERVICE\MSDTC: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CID.Local\92e8198a-44ac-494d-bc7a-0e3030d5f5b9\CustomProperties\LOG\Path\ has data ''C:\\Windows\\system32\\MSDtc'' and permissions:
+    ALLOW NT SERVICE\MSDTC: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Classes\CID.Local\92e8198a-44ac-494d-bc7a-0e3030d5f5b9\CustomProperties\Service\Path\ has data ''C:\\Windows\\system32'' and permissions:
+    ALLOW NT SERVICE\MSDTC: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Diagnostics\Performance\ActiveShutdownDCL has data ''C:\\Windows\\System32\\WDI\\LogFiles\\WdiContextLog.etl.003'' and permissions:
+    ALLOW NT SERVICE\WdiServiceHost: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Diagnostics\Performance\BootCKCLSettings\FileName has data ''%SystemRoot%\\system32\\WDI\\LogFiles\\BootCKCL.etl'' and permissions:
+    ALLOW NT SERVICE\WdiServiceHost: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Diagnostics\Performance\SecondaryLogonCKCLSettings\FileName has data ''%SystemRoot%\\system32\\WDI\\LogFiles\\SecondaryLogonCKCL.etl'' and permissions:
+    ALLOW NT SERVICE\WdiServiceHost: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Control\Diagnostics\Performance\ShutdownCKCLSettings\FileName has data ''%SystemRoot%\\system32\\WDI\\LogFiles\\ShutdownCKCL.etl'' and permissions:
+    ALLOW NT SERVICE\WdiServiceHost: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\AxInstSV\Parameters\ServiceDll has data ''%SystemRoot%\\System32\\AxInstSV.dll'' and permissions:
+    ALLOW NT SERVICE\AxInstSV: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Eaphost\ImagePath has data ''%SystemRoot%\\System32\\svchost.exe -k netsvcs'' and permissions:
+    ALLOW [unknown]\S-1-5-21-1816462925-3706205934-1807523569-500: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Eaphost\Methods\311\254\14122\1\PeerDllPath has data ''%SystemRoot%\\System32\\WcnEapPeerProxy.dll'' and permissions:
+    ALLOW [unknown]\S-1-5-21-1816462925-3706205934-1807523569-500: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\iphlpsvc\Parameters\ServiceDll has data ''%SystemRoot%\\System32\\iphlpsvc.dll'' and permissions:
+    ALLOW NT SERVICE\iphlpsvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\NcbService\Parameters\ServiceDll has data ''%SystemRoot%\\System32\\ncbservice.dll'' and permissions:
+    ALLOW NT SERVICE\NcbService: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\SharedAccess\Defaults\FirewallPolicy\DomainProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\SharedAccess\Defaults\FirewallPolicy\PublicProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\SharedAccess\Defaults\FirewallPolicy\StandardProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\SharedAccess\Parameters\FirewallPolicy\DomainProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\SharedAccess\Parameters\FirewallPolicy\PublicProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\SstpSvc\Parameters\ServiceDll has data ''%SystemRoot%\\system32\\sstpsvc.dll'' and permissions:
+    ALLOW NT SERVICE\SstpSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Tcpip\Parameters\DataBasePath has data ''%SystemRoot%\\System32\\drivers\\etc'' and permissions:
+    ALLOW NT AUTHORITY\NETWORK SERVICE: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Tcpip\Parameters\DataBasePath has data ''%SystemRoot%\\System32\\drivers\\etc'' and permissions:
+    ALLOW NT SERVICE\Dhcp: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Tcpip\Parameters\DataBasePath has data ''%SystemRoot%\\System32\\drivers\\etc'' and permissions:
+    ALLOW NT SERVICE\WwanSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\W32Time\TimeProviders\NtpClient\DllName has data ''%systemroot%\\system32\\w32time.dll'' and permissions:
+    ALLOW NT SERVICE\W32Time: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\W32Time\TimeProviders\NtpServer\DllName has data ''%systemroot%\\system32\\w32time.dll'' and permissions:
+    ALLOW NT SERVICE\W32Time: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\W32Time\TimeProviders\VMICTimeProvider\DllName has data ''%SystemRoot%\\System32\\vmictimeprovider.dll'' and permissions:
+    ALLOW NT SERVICE\W32Time: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\W32Time\TimeProviders\VMICTimeProvider\DllName has data ''%SystemRoot%\\System32\\vmictimeprovider.dll'' and permissions:
+    ALLOW NT SERVICE\vmictimesync: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Diagnostics\Performance\ActiveShutdownDCL has data ''C:\\Windows\\System32\\WDI\\LogFiles\\WdiContextLog.etl.003'' and permissions:
+    ALLOW NT SERVICE\WdiServiceHost: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Diagnostics\Performance\BootCKCLSettings\FileName has data ''%SystemRoot%\\system32\\WDI\\LogFiles\\BootCKCL.etl'' and permissions:
+    ALLOW NT SERVICE\WdiServiceHost: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Diagnostics\Performance\SecondaryLogonCKCLSettings\FileName has data ''%SystemRoot%\\system32\\WDI\\LogFiles\\SecondaryLogonCKCL.etl'' and permissions:
+    ALLOW NT SERVICE\WdiServiceHost: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Diagnostics\Performance\ShutdownCKCLSettings\FileName has data ''%SystemRoot%\\system32\\WDI\\LogFiles\\ShutdownCKCL.etl'' and permissions:
+    ALLOW NT SERVICE\WdiServiceHost: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\AxInstSV\Parameters\ServiceDll has data ''%SystemRoot%\\System32\\AxInstSV.dll'' and permissions:
+    ALLOW NT SERVICE\AxInstSV: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Eaphost\ImagePath has data ''%SystemRoot%\\System32\\svchost.exe -k netsvcs'' and permissions:
+    ALLOW [unknown]\S-1-5-21-1816462925-3706205934-1807523569-500: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Eaphost\Methods\311\254\14122\1\PeerDllPath has data ''%SystemRoot%\\System32\\WcnEapPeerProxy.dll'' and permissions:
+    ALLOW [unknown]\S-1-5-21-1816462925-3706205934-1807523569-500: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\iphlpsvc\Parameters\ServiceDll has data ''%SystemRoot%\\System32\\iphlpsvc.dll'' and permissions:
+    ALLOW NT SERVICE\iphlpsvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NcbService\Parameters\ServiceDll has data ''%SystemRoot%\\System32\\ncbservice.dll'' and permissions:
+    ALLOW NT SERVICE\NcbService: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Defaults\FirewallPolicy\DomainProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Defaults\FirewallPolicy\PublicProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Defaults\FirewallPolicy\StandardProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\DomainProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\PublicProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile\Logging\LogFilePath has data ''%systemroot%\\system32\\LogFiles\\Firewall\\pfirewall.log'' and permissions:
+    ALLOW NT SERVICE\MpsSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SstpSvc\Parameters\ServiceDll has data ''%SystemRoot%\\system32\\sstpsvc.dll'' and permissions:
+    ALLOW NT SERVICE\SstpSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\DataBasePath has data ''%SystemRoot%\\System32\\drivers\\etc'' and permissions:
+    ALLOW NT AUTHORITY\NETWORK SERVICE: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\DataBasePath has data ''%SystemRoot%\\System32\\drivers\\etc'' and permissions:
+    ALLOW NT SERVICE\Dhcp: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\DataBasePath has data ''%SystemRoot%\\System32\\drivers\\etc'' and permissions:
+    ALLOW NT SERVICE\WwanSvc: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpClient\DllName has data ''%systemroot%\\system32\\w32time.dll'' and permissions:
+    ALLOW NT SERVICE\W32Time: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\NtpServer\DllName has data ''%systemroot%\\system32\\w32time.dll'' and permissions:
+    ALLOW NT SERVICE\W32Time: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\VMICTimeProvider\DllName has data ''%SystemRoot%\\System32\\vmictimeprovider.dll'' and permissions:
+    ALLOW NT SERVICE\W32Time: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W32Time\TimeProviders\VMICTimeProvider\DllName has data ''%SystemRoot%\\System32\\vmictimeprovider.dll'' and permissions:
+    ALLOW NT SERVICE\vmictimesync: KEY_SET_VALUE
+
+[ recommendation ]
+
+Set strong registry permissions on any values that high privileged processes use to determine paths.
+
+------------------------------------------------------------------
+Title: Non-Admin Can Change Registry Paths That Are Stored In The Registry
+
+[ description ]
+
+A walk of the registry found some registry keys that can be changed by non-admin users (KEY_SET_VALUE permission). The data in some of those keys appears to be a registry path (e.g. SYSTEM\...). This is a simple regular-expression match so may report false positives. In some instances it may be possible for an low-privilged user to cause other users to follow read malicious data from the registry. The may or may not lead to privilege escalation depending on the context.
+
+The following registry value are affected:
+
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Dhcp\Parameters\Options\46\RegLocation has data ''SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters\\DhcpNodeType'' and permissions:
+    ALLOW NT SERVICE\Dhcp: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\ControlSet001\Services\Dhcp\Parameters\Options\47\RegLocation has data ''SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters\\DhcpScopeID'' and permissions:
+    ALLOW NT SERVICE\Dhcp: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Dhcp\Parameters\Options\46\RegLocation has data ''SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters\\DhcpNodeType'' and permissions:
+    ALLOW NT SERVICE\Dhcp: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Dhcp\Parameters\Options\47\RegLocation has data ''SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters\\DhcpScopeID'' and permissions:
+    ALLOW NT SERVICE\Dhcp: KEY_SET_VALUE
+
+[ recommendation ]
+
+Set strong registry permissions on any values that high privileged processes use to determine registry paths.
+
+------------------------------------------------------------------
+Title: Windows Service Registry Keys Allow Untrusted Users To Create Subkeys
+
+[ description ]
+
+Configuration information for Windows Service is stored in the registry. Some of the keys were found to have the KEY_CREATE_SUB_KEY permission granted for non-administrative users. It may be possible for low privileged users to manipulate service - though this would depend on how the service responded to the addition of new registry keys.
+
+The registry keys below had KEY_CREATE_SUB_KEY granted for non-administrative users:
+
+    DHCP Client (Dhcp) uses registry key HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Dhcp:
+    HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Dhcp: ALLOW NT SERVICE\Dhcp: KEY_CREATE_SUB_KEY
+    Extensible Authentication Protocol (Eaphost) uses registry key HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Eaphost:
+    HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Eaphost: ALLOW [unknown]\S-1-5-21-1816462925-3706205934-1807523569-500: KEY_CREATE_SUB_KEY
+
+[ recommendation ]
+
+Review the permissions of keys with KEY_CREATE_SUB_KEY granged. Revoke KEY_CREATE_SUB_KEY permissions for non-administrative users where possible.
+
+------------------------------------------------------------------
+Title: Permissions on Windows Service Registry Keys Can Be Changed By Untrusted Users
+
+[ description ]
+
+Configuration information for Windows Service is stored in the registry. TODO.
+
+The registry keys below were owned by non-administrative users:
+
+    AllJoyn Router Service (AJRouter) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Application Layer Gateway Service (ALG) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Application Identity (AppIDSvc) runs the following program as NT Authority\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Application Information (Appinfo) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Application Management (AppMgmt) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    App Readiness (AppReadiness) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    AppX Deployment Service (AppXSVC) (AppXSvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Audio Endpoint Builder (AudioEndpointBuilder) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Audio (Audiosrv) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    ActiveX Installer (AxInstSV) (AxInstSV) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    BitLocker Drive Encryption Service (BDESVC) runs the following program as localSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Base Filtering Engine (BFE) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Background Intelligent Transfer Service (BITS) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Background Tasks Infrastructure Service (BrokerInfrastructure) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Computer Browser (Browser) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Bluetooth Handsfree Service (BthHFSrv) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Bluetooth Support Service (bthserv) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Connected Device Platform Service (CDPSvc) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Certificate Propagation (CertPropSvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Client License Service (ClipSVC) (ClipSVC) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    COM+ System Application (COMSysApp) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    CoreMessaging (CoreMessagingRegistrar) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Cryptographic Services (CryptSvc) runs the following program as NT Authority\NetworkService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Offline Files (CscService) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    DCOM Server Process Launcher (DcomLaunch) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    DataCollectionPublishingService (DcpSvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Optimize drives (defragsvc) runs the following program as localSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Device Association Service (DeviceAssociationService) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Device Install Service (DeviceInstall) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    DevQuery Background Discovery Broker (DevQueryBroker) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    DHCP Client (Dhcp) runs the following program as NT Authority\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft (R) Diagnostics Hub Standard Collector Service (diagnosticshub.standardcollector.service) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Connected User Experiences and Telemetry (DiagTrack) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Device Management Enrollment Service (DmEnrollmentSvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    dmwappushsvc (dmwappushservice) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    DNS Client (Dnscache) runs the following program as NT AUTHORITY\NetworkService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Delivery Optimization (DoSvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Wired AutoConfig (dot3svc) runs the following program as localSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Diagnostic Policy Service (DPS) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Device Setup Manager (DsmSvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Data Sharing Service (DsSvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Extensible Authentication Protocol (Eaphost) runs the following program as localSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Encrypting File System (EFS) (EFS) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    embeddedmode (embeddedmode) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Enterprise App Management Service (EntAppSvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Event Log (EventLog) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    COM+ Event System (EventSystem) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Fax (Fax) runs the following program as NT AUTHORITY\NetworkService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Function Discovery Provider Host (fdPHost) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Function Discovery Resource Publication (FDResPub) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    File History Service (fhsvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Font Cache Service (FontCache) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Group Policy Client (gpsvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Human Interface Device Service (hidserv) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    HomeGroup Provider (HomeGroupProvider) runs the following program as NT AUTHORITY\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Mobile Hotspot Service (icssvc) runs the following program as NT Authority\LocalService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Internet Explorer ETW Collector Service (IEEtwCollectorService) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    IKE and AuthIP IPsec Keying Modules (IKEEXT) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    IP Helper (iphlpsvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    CNG Key Isolation (KeyIso) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    KtmRm for Distributed Transaction Coordinator (KtmRm) runs the following program as NT AUTHORITY\NetworkService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Server (LanmanServer) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Workstation (LanmanWorkstation) runs the following program as NT AUTHORITY\NetworkService:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Geolocation Service (lfsvc) runs the following program as LocalSystem:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+
+[ recommendation ]
+
+TODO.
+
+------------------------------------------------------------------
+Title: SMB Server Does Not Mandate Packet Signing
+
+[ description ]
+
+SMB clients that connect to this server are not forced to use signing. As signing protects data from modification in transit, clients may end up receiving data that has been maliciously altered by an attacker. This could lead to a compromise of the client if it opens or runs the files accessed - particularly in the case of a domain member access group policy information.
+
+The following registry key shows the current policy setting:
+
+    Reg key: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanManServer\Parameters\RequireSecuritySignature, Value: 0
+
+[ recommendation ]
+
+Set the security policy setting 'Microsoft network server: Digitally sign communications (always)' to Enabled.
+
+------------------------------------------------------------------
+Title: SMB Client Does Not Mandate Packet Signing
+
+[ description ]
+
+SMB connection originating from this host might not negotiate pack signing. As signing protects data from modification in transit, clients may end up sending or receiving data that has been maliciously altered by an attacker. This could lead to a compromise of the client or server.
+
+The following registry key shows the current policy setting:
+
+    Reg key: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\LanmanWorkstation\Parameters\RequireSecuritySignature, Value: 0
+
+[ recommendation ]
+
+Set the security policy setting 'Microsoft network server: Digitally sign communications (always)' to Enabled.
+
+------------------------------------------------------------------
+Title: Service Can Be Started By Non-Admin Users
+
+[ description ]
+
+The service-level permissions on some Windows services allow them to be started by non-administrative users. This can often be desirable, in which case this issue can be ignored. However, sometimes it can allow users to expose or exploit a vulnerability connected with the service - e.g. it may listen on the network or it may have been tampered with by an attacker and they now need to start the service. The permission is not always dangerous on its own, but can sometimes aid a local attacker.
+
+The SERVICE_START permission has been granted to the following non-administrative users:
+
+    Application Information (Appinfo) which runs as LocalSystem has permission granted for: NT AUTHORITY\INTERACTIVE
+    Application Management (AppMgmt) which runs as LocalSystem has permission granted for: NT AUTHORITY\INTERACTIVE
+    AppX Deployment Service (AppXSVC) (AppXSvc) which runs as LocalSystem has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    AppX Deployment Service (AppXSVC) (AppXSvc) which runs as LocalSystem has permission granted for: NT AUTHORITY\INTERACTIVE
+    AppX Deployment Service (AppXSVC) (AppXSvc) which runs as LocalSystem has permission granted for: NT AUTHORITY\SERVICE
+    BitLocker Drive Encryption Service (BDESVC) which runs as localSystem has permission granted for: BUILTIN\Users
+    BitLocker Drive Encryption Service (BDESVC) which runs as localSystem has permission granted for: NT AUTHORITY\Authenticated Users
+    Background Tasks Infrastructure Service (BrokerInfrastructure) which runs as LocalSystem has permission granted for: BUILTIN\Users
+    Certificate Propagation (CertPropSvc) which runs as LocalSystem has permission granted for: NT SERVICE\TermService
+    Client License Service (ClipSVC) (ClipSVC) which runs as LocalSystem has permission granted for: NT AUTHORITY\INTERACTIVE
+    Client License Service (ClipSVC) (ClipSVC) which runs as LocalSystem has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    Client License Service (ClipSVC) (ClipSVC) which runs as LocalSystem has permission granted for: NT AUTHORITY\SERVICE
+    Client License Service (ClipSVC) (ClipSVC) which runs as LocalSystem has permission granted for: NT AUTHORITY\Authenticated Users
+    CoreMessaging (CoreMessagingRegistrar) which runs as NT AUTHORITY\LocalService has permission granted for: NT AUTHORITY\SERVICE
+    CoreMessaging (CoreMessagingRegistrar) which runs as NT AUTHORITY\LocalService has permission granted for: NT AUTHORITY\INTERACTIVE
+    CoreMessaging (CoreMessagingRegistrar) which runs as NT AUTHORITY\LocalService has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    Cryptographic Services (CryptSvc) which runs as NT Authority\NetworkService has permission granted for: [unknown]\S-1-5-32-549
+    DHCP Client (Dhcp) which runs as NT Authority\LocalService has permission granted for: \CONSOLE LOGON
+    dmwappushsvc (dmwappushservice) which runs as LocalSystem has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    dmwappushsvc (dmwappushservice) which runs as LocalSystem has permission granted for: NT AUTHORITY\INTERACTIVE
+    dmwappushsvc (dmwappushservice) which runs as LocalSystem has permission granted for: NT AUTHORITY\Authenticated Users
+    DNS Client (Dnscache) which runs as NT AUTHORITY\NetworkService has permission granted for: BUILTIN\Users
+    DNS Client (Dnscache) which runs as NT AUTHORITY\NetworkService has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    Delivery Optimization (DoSvc) which runs as LocalSystem has permission granted for: NT AUTHORITY\Authenticated Users
+    Device Setup Manager (DsmSvc) which runs as LocalSystem has permission granted for: BUILTIN\Users
+    Data Sharing Service (DsSvc) which runs as LocalSystem has permission granted for: \Everyone
+    Data Sharing Service (DsSvc) which runs as LocalSystem has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    Encrypting File System (EFS) (EFS) which runs as LocalSystem has permission granted for: NT AUTHORITY\INTERACTIVE
+    Encrypting File System (EFS) (EFS) which runs as LocalSystem has permission granted for: NT AUTHORITY\SERVICE
+    Encrypting File System (EFS) (EFS) which runs as LocalSystem has permission granted for: NT AUTHORITY\Authenticated Users
+    Encrypting File System (EFS) (EFS) which runs as LocalSystem has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    embeddedmode (embeddedmode) which runs as LocalSystem has permission granted for: NT AUTHORITY\Authenticated Users
+    Enterprise App Management Service (EntAppSvc) which runs as LocalSystem has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    Enterprise App Management Service (EntAppSvc) which runs as LocalSystem has permission granted for: NT AUTHORITY\INTERACTIVE
+    Enterprise App Management Service (EntAppSvc) which runs as LocalSystem has permission granted for: NT AUTHORITY\SERVICE
+    Fax (Fax) which runs as NT AUTHORITY\NetworkService has permission granted for: \Everyone
+    Fax (Fax) which runs as NT AUTHORITY\NetworkService has permission granted for: NT SERVICE\Fax
+    File History Service (fhsvc) which runs as LocalSystem has permission granted for: NT AUTHORITY\Authenticated Users
+    Windows Font Cache Service (FontCache) which runs as NT AUTHORITY\LocalService has permission granted for: NT AUTHORITY\INTERACTIVE
+    Windows Font Cache Service (FontCache) which runs as NT AUTHORITY\LocalService has permission granted for: NT AUTHORITY\SERVICE
+    Windows Font Cache Service (FontCache) which runs as NT AUTHORITY\LocalService has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    HomeGroup Provider (HomeGroupProvider) which runs as NT AUTHORITY\LocalService has permission granted for: NT AUTHORITY\INTERACTIVE
+    Windows Mobile Hotspot Service (icssvc) which runs as NT Authority\LocalService has permission granted for: \Everyone
+    CNG Key Isolation (KeyIso) which runs as LocalSystem has permission granted for: NT AUTHORITY\INTERACTIVE
+    CNG Key Isolation (KeyIso) which runs as LocalSystem has permission granted for: NT AUTHORITY\SERVICE
+    KtmRm for Distributed Transaction Coordinator (KtmRm) which runs as NT AUTHORITY\NetworkService has permission granted for: \LOCAL
+    KtmRm for Distributed Transaction Coordinator (KtmRm) which runs as NT AUTHORITY\NetworkService has permission granted for: NT AUTHORITY\INTERACTIVE
+    KtmRm for Distributed Transaction Coordinator (KtmRm) which runs as NT AUTHORITY\NetworkService has permission granted for: NT AUTHORITY\SERVICE
+
+[ recommendation ]
+
+Review the service-level permissions that have been granted to non-administrative users and revoke access where possible.
+
+------------------------------------------------------------------
+Title: Service Can Be Stopped By Non-Admin Users
+
+[ description ]
+
+The service-level permissions on some Windows services allow them to be stopped by non-administrative users. This can often be desirable, in which case this issue can be ignored. However, sometimes it can allow users to evade monitoring services - e.g. Anti-virus. This permission can also be required in order to exploit other weaknesses such as weak file permissions on service executables. The permission is not always dangerous on its own, but can sometimes aid a local attacker.
+
+The SERVICE_STOP permission has been granted to the following non-administrative users:
+
+    Certificate Propagation (CertPropSvc) which runs as LocalSystem has permission granted for: NT SERVICE\TermService
+    Cryptographic Services (CryptSvc) which runs as NT Authority\NetworkService has permission granted for: [unknown]\S-1-5-32-549
+    Fax (Fax) which runs as NT AUTHORITY\NetworkService has permission granted for: NT SERVICE\Fax
+    HomeGroup Provider (HomeGroupProvider) which runs as NT AUTHORITY\LocalService has permission granted for: NT AUTHORITY\INTERACTIVE
+
+[ recommendation ]
+
+Review the service-level permissions that have been granted to non-administrative users and revoke access where possible.
+
+------------------------------------------------------------------
+Title: Service Can Be Paused/Resumed By Non-Admin Users
+
+[ description ]
+
+The service-level permissions on some Windows services allow them to be paused/resumed by non-administrative users. This can often be desirable, in which case this issue can be ignored. However, sometimes it can allow users to allow users to evade monitoring - e.g. from Anti-virus services. The permission is not always dangerous on its own, but can sometimes aid a local attacker.
+
+The SERVICE_PAUSE_CONTINUE permission has been granted to the following non-administrative users:
+
+    Cryptographic Services (CryptSvc) which runs as NT Authority\NetworkService has permission granted for: [unknown]\S-1-5-32-549
+    DNS Client (Dnscache) which runs as NT AUTHORITY\NetworkService has permission granted for: NT SERVICE\Dhcp
+    Fax (Fax) which runs as NT AUTHORITY\NetworkService has permission granted for: NT SERVICE\Fax
+
+[ recommendation ]
+
+Review the service-level permissions that have been granted to non-administrative users and revoke access where possible.
+
+------------------------------------------------------------------
+Title: Non-Admin Can Change Usernames That Are Stored In The Registry
+
+[ description ]
+
+A walk of the registry found some registry keys that can be changed by non-admin users (KEY_SET_VALUE permission). The data in some of those keys appears to be a username. This is a simple regular-expression match so may report false positives. In some instances it may be possible for an low-privilged user to cause another process to run as or otherwise affect a different user account.
+
+The following registry value are affected:
+
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSDTC\Security\AccountName has data ''NT AUTHORITY\\NetworkService'' and permissions:
+    ALLOW NT SERVICE\MSDTC: KEY_SET_VALUE
+    Registry value HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\MSDTC\Security\AccountName has data ''NT AUTHORITY\\NetworkService'' and permissions:
+    ALLOW NT SERVICE\KtmRm: KEY_SET_VALUE
+
+[ recommendation ]
+
+Set strong registry permissions on any values that high privileged processes use to determine usernames.
+
+------------------------------------------------------------------
+Title: Directory Creation Allowed On Drive Root
+
+[ description ]
+
+Some of the local drive roots allow non-administrative users to create directories. This could provide attackers with a place to stash hacking tools, or proive legitimacy to malware they are seeking to get other users to run. It is relatively common to allow the creation of directories in the drive root, but it probably isn't required for normal operation. NB: This issue has only been reported for NTFS filesystems. Other non-NTFS file system may also allow this behaviour. A separate issue is reported for non-NTFS filesystems.
+
+The following drives allow non-administrative users to create directories in to their root:
+
+    Drive C:\ allows NT AUTHORITY\Authenticated Users to add directories
+
+[ recommendation ]
+
+Modify the permissions on the drive roots to only allow administrators to create directories. Revoke this permission from low-privileged users.
+
+------------------------------------------------------------------
+Title: Current Working Directory Used For DLL Search - Including Network Locations
+
+[ description ]
+
+CWDIllegalInDllSearch was set to 0. This causes applications (by default) to load DLLs from the current directory - even for network locations. This can lead to malicious DLLs being executed in some attack scenarios. Note that KB2264107 needs to be installed to enable more secure settings - not checked for. Also apps can be secured individually - also not checked for.
+
+The following registry key shows the current policy setting:
+
+    Reg key: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\CWDIllegalInDllSearch, Value: None
+
+[ recommendation ]
+
+Consider setting CWDIllegalInDllSearch to 1, 2 or 0xFFFFFFFF to improve security - though this may break some applications. See http://support.microsoft.com/kb/2264107 for further information including how to set CWDIllegalInDllSearch on a per-application basis.
+
+------------------------------------------------------------------
+Title: User Access Control Does not Prompt on the Secure Desktop
+
+[ description ]
+
+UAC has not been configured to use the secure desktop when prompting for elevation. It might be possible to subvert the consent process and trick a user into approving elevation of malware.
+
+The following registry key shows the current policy setting:
+
+    Reg key: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\PromptOnSecureDesktop, Value: 0
+
+[ recommendation ]
+
+Enable the security policy setting 'User Account Control: Switch to the secure desktop when prompting for elevation'.
+
+------------------------------------------------------------------
+Title: Securable Object (directory) Found With Weak Permissions
+
+[ description ]
+
+Some securable objects were found to allow write access to non-admin users. TODO: impact?
+
+The following directory objects are affected:
+
+    \Windows (Directory) has the following weak permissions: ALLOW [unknown]\S-1-5-90-0-0: DIRECTORY_CREATE_OBJECT DIRECTORY_CREATE_SUBDIRECTORY DELETE WRITE_DAC WRITE_OWNER:
+
+[ recommendation ]
+
+Set strong permissions on all affected objects.
+
+------------------------------------------------------------------
+Title: List Of Logged On Users
+
+[ description ]
+
+Some users were logged on at the time of the audit. This is not necessarily a security problem. However, if there are several domain admins logged in unnecessarily, this could be an deemed a security issue.
+
+The following users were logged in at the time of the audit:
+
+    JOEGRAY158D\test
+    JOEGRAY158D\joegray
+    JOEGRAY158D\joegray
+
+[ recommendation ]
+
+None.
+
+------------------------------------------------------------------
+Title: Some Users Have Passwords That Don't Expire
+
+[ description ]
+
+TODO UF_DONT_EXPIRE_PASSWD was set for some accounts that were neither locked nor disabled
+
+The following users are affected:
+
+    JOEGRAY158D\joegray
+    JOEGRAY158D\test
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver Registry Key Parent Key Allows Untrusted User WRITE_OWNER/WRITE_DAC
+
+[ description ]
+
+TODO
+
+TODO:
+
+    1394 OHCI Compliant Host Controller (1394ohci) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    3ware (3ware) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft ACPI Driver (ACPI) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft ACPIEx Driver (acpiex) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    ACPI Processor Aggregator Driver (acpipagr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    ACPI Power Meter Driver (AcpiPmi) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    ACPI Wake Alarm Driver (acpitime) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    ADP80XX (ADP80XX) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Ancillary Function Driver for Winsock (AFD) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel AGP Bus Filter (agp440) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Application Compatibility Cache (ahcache) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    AMD K8 Processor Driver (AmdK8) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    AMD Processor Driver (AmdPPM) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    amdsata (amdsata) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    amdsbs (amdsbs) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    amdxata (amdxata) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    AppID Driver (AppID) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Adaptec SAS/SATA-II RAID Storport's Miniport Driver (arcsas) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    RAS Asynchronous Media Driver (AsyncMac) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    IDE Channel (atapi) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Broadcom NetXtreme II VBD (b06bdrv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    BasicDisplay (BasicDisplay) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    BasicRender (BasicRender) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    bcmfn Service (bcmfn) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    bcmfn2 Service (bcmfn2) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Beep (Beep) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Browser Support Driver (bowser) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Bluetooth Audio/Video Remote Control HID (BthAvrcpTg) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Bluetooth Hands-Free Audio and Call Control HID Enumerator (BthHFEnum) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Bluetooth Hands-Free Call Control HID (bthhfhid) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Bluetooth Modem Communications Driver (BTHMODEM) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Service for Portable Device Control devices (buttonconverter) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    HID driver for CapImg touch screen (CapImg) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    CD/DVD File System Reader (cdfs) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    CD-ROM Driver (cdrom) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Consumer IR Devices (circlass) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Common Log (CLFS) (CLFS) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft ACPI Control Method Battery Driver (CmBatt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    CNG (CNG) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    CNG Hardware Assist algorithm provider (cnghwassist) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Composite Bus Enumerator Driver (CompositeBus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Console Driver (condrv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Offline Files Driver (CSC) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Desktop Activity Moderator Driver (dam) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    DFS Namespace Client Driver (Dfsc) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Disk Driver (disk) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    dmvsc (dmvsc) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Trusted Audio Drivers (drmkaud) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    LDDM Graphics Subsystem (DXGKrnl) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel(R) PRO/1000 PCI Express Network Connection Driver I (e1iexpress) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    QLogic 10 Gigabit Ethernet Adapter VBD (ebdrv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Enhanced Storage Filter Driver (EhStorClass) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft driver for storage devices supporting IEEE 1667 and TCG protocols (EhStorTcgDrv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Hardware Error Device Driver (ErrDev) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    exFAT File System Driver (exfat) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    FAT12/16/32 File System Driver (fastfat) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Floppy Disk Controller Driver (fdc) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    FileCrypt (FileCrypt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    File Information FS MiniFilter (FileInfo) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Filetrace (Filetrace) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Floppy Disk Driver (flpydisk) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    FltMgr (FltMgr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    File System Dependency Minifilter (FsDepends) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    BitLocker Drive Encryption Filter Driver (fvevol) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Generic AGPv3.0 Filter for K8 Processor Platforms (gagp30kx) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Hyper-V Generation Counter (gencounter) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Generic USB Function Class (genericusbfn) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft GPIO Class Extension Driver (GPIOClx0101) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    GPU Energy Driver (GpuEnergyDrv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft UAA Bus Driver for High Definition Audio (HDAudBus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    HID UPS Battery Driver (HidBatt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Bluetooth HID Miniport (HidBth) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft I2C HID Miniport Driver (hidi2c) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Common Driver for HID Buttons implemented with interrupts (hidinterrupt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Infrared HID Driver (HidIr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft HID Class Driver (HidUsb) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    HpSAMD (HpSAMD) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    HTTP Service (HTTP) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Hardware Policy Driver (hwpolicy) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    hyperkbd (hyperkbd) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    PS/2 Keyboard and Mouse Port Driver (i8042prt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel(R) Serial IO I2C Host Controller (iai2c) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel(R) Serial IO I2C Driver v2 (iaLPSS2i_I2C) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel(R) Serial IO GPIO Controller Driver (iaLPSSi_GPIO) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel(R) Serial IO I2C Controller Driver (iaLPSSi_I2C) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel(R) SATA RAID Controller Windows (iaStorAV) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel RAID Controller Windows 7 (iaStorV) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Mellanox InfiniBand Bus/AL (Filter Driver) (ibbus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    intelide (intelide) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel(R) Power Engine Plug-in Driver (intelpep) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Intel Processor Driver (intelppm) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    IoQos (IoQos) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    IP Traffic Filter Driver (IpFilterDriver) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    IPMIDRV (IPMIDRV) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    IP Network Address Translator (IPNAT) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    IR Bus Enumerator (IRENUM) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    isapnp (isapnp) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    iScsiPort Driver (iScsiPrt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Keyboard Class Driver (kbdclass) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Keyboard HID Driver (kbdhid) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Kernel Debug Network Miniport (NDIS 6.20) (kdnic) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    KSecDD (KSecDD) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    KSecPkg (KSecPkg) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Kernel Streaming Thunks (ksthunk) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Link-Layer Topology Discovery Mapper I/O Driver (lltdio) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    LSI_SAS (LSI_SAS) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    LSI_SAS2i (LSI_SAS2i) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    LSI_SAS3i (LSI_SAS3i) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    LSI_SSS (LSI_SSS) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    UAC File Virtualization (luafv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    megasas (megasas) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    megasr (megasr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Mellanox ConnectX Bus Enumerator (mlx4_bus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Multimedia Class Scheduler (MMCSS) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Modem (Modem) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Monitor Class Function Driver Service (monitor) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Mouse Class Driver (mouclass) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Mouse HID Driver (mouhid) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Mount Point Manager (mountmgr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Firewall Authorization Driver (mpsdrv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WebDav Client Redirector Driver (MRxDAV) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    SMB MiniRedirector Wrapper and Engine (mrxsmb) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    SMB 1.x MiniRedirector (mrxsmb10) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    SMB 2.0 MiniRedirector (mrxsmb20) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft MAC Bridge (MsBridge) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Msfs (Msfs) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Common Driver for Buttons, DockMode and Laptop/Slate Indicator (msgpiowin32) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Pass-through HID to KMDF Filter Driver (mshidkmdf) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Pass-through HID to UMDF Driver (mshidumdf) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    msisadrv (msisadrv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Streaming Service Proxy (MSKSSRV) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Streaming Clock Proxy (MSPCLOCK) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Streaming Quality Manager Proxy (MSPQM) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    MsRPC (MsRPC) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft System Management BIOS Driver (mssmbios) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Streaming Tee/Sink-to-Sink Converter (MSTEE) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Input Configuration Driver (MTConfig) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Mup (Mup) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    mvumis (mvumis) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NativeWiFi Filter (NativeWifiP) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NetworkDirect Service (ndfltr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NDIS System Driver (NDIS) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft NDIS Capture (NdisCap) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Network Adapter Multiplexor Protocol (NdisImPlatform) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Access NDIS TAPI Driver (NdisTapi) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NDIS Usermode I/O Protocol (Ndisuio) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Virtual Network Adapter Enumerator (NdisVirtualBus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Access NDIS WAN Driver (NdisWan) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Access LEGACY NDIS WAN Driver (ndiswanlegacy) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    @%SystemRoot%\system32\drivers\todo.sys,-101;NDIS Proxy (ndproxy) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Network Data Usage Monitoring Driver (Ndu) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NetBIOS Interface (NetBIOS) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NetBT (NetBT) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Npfs (Npfs) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Named pipe service trigger provider (npsvctrig) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NSI Proxy Service Driver (nsiproxy) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NTFS (NTFS) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Null (Null) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    nvraid (nvraid) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    nvstor (nvstor) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NVIDIA nForce AGP Bus Filter (nv_agp) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Parallel port driver (Parport) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Partition Manager (partmgr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    PCI Bus Driver (pci) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    pciide (pciide) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    pcmcia (pcmcia) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Performance Counters for Windows Driver (pcw) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    pdc (pdc) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    PEAUTH (PEAUTH) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    percsas2i (percsas2i) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    percsas3i (percsas3i) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WAN Miniport (PPTP) (PptpMiniport) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    prl_boot (prl_boot) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Parallels Display Adapter (WDDM) (prl_dd) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Parallels Shared Folders (prl_fs) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    prl_memdev (prl_memdev) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Parallels Mouse Synchronization Device (prl_mouf) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Parallels Audio Controller (prl_sound) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Parallels paravirt disk filter (prl_strg) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Parallels Tool Device (prl_tg) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Processor Driver (Processor) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    QoS Packet Scheduler (Psched) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    QWAVE driver (QWAVEdrv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Access Auto Connection Driver (RasAcd) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WAN Miniport (IKEv2) (RasAgileVpn) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WAN Miniport (L2TP) (Rasl2tp) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Access PPPOE Driver (RasPppoe) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WAN Miniport (SSTP) (RasSstp) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Redirected Buffering Sub System (rdbss) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Desktop Device Redirector Bus Driver (rdpbus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Desktop Device Redirector Driver (RDPDR) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Desktop Video Miniport Driver (RdpVideoMiniport) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    ReadyBoost (rdyboost) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    ReFSv1 (ReFSv1) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Link-Layer Topology Discovery Responder (rspndr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    s3cap (s3cap) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    SBP-2 Transport/Protocol Bus Driver (sbp2port) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Smart card PnP Class Filter Driver (scfilter) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    sdbus (sdbus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    SD Storage Port Driver (sdstor) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Serial UART Support Library (SerCx) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Serial UART Support Library (SerCx2) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Serenum Filter Driver (Serenum) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Serial port driver (Serial) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Serial Mouse Driver (sermouse) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    High-Capacity Floppy Disk Drive (sfloppy) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    SiSRaid2 (SiSRaid2) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    SiSRaid4 (SiSRaid4) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Storage Spaces Driver (spaceport) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Simple Peripheral Bus Support Library (SpbCx) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Server SMB 1.xxx Driver (srv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Server SMB 2.xxx Driver (srv2) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    srvnet (srvnet) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    stexstor (stexstor) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Standard SATA AHCI Driver (storahci) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Hyper-V Storage Accelerator (storflt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Standard NVM Express Driver (stornvme) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Storage QoS Filter Driver (storqosflt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Universal Flash Storage (UFS) Driver (storufs) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    storvsc (storvsc) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Software Bus Driver (swenum) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Synth3dVsc (Synth3dVsc) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    TCP/IP Protocol Driver (Tcpip) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    @todo.dll,-100;Microsoft IPv6 Protocol Driver (Tcpip6) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    TCP/IP Registry Compatibility (tcpipreg) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    NetIO Legacy TDI Support Driver (tdx) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Remote Desktop Input Driver (terminpt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    TPM (TPM) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Desktop USB Hub Class Filter Driver (tsusbflt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Desktop Generic USB Device (TsUsbGD) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft AGPv3.5 Filter (uagp35) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Attached SCSI (UAS) Driver (UASPStor) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Connector Manager KMDF Class Extension (UcmCx0101) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Connector Manager UCSI Client (UcmUcsi) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Host Support Library (Ucx01000) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Device Emulation Support Library (UdeCx) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    udfs (udfs) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft UEFI Driver (UEFI) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Function Class Extension (Ufx01000) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Chipidea Controller (UfxChipidea) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Synopsys Controller (ufxsynopsys) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Uli AGP Bus Filter (uliagpkx) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    UMBus Enumerator Driver (umbus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft UMPass Driver (UmPass) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Chipidea USB Role-Switch Driver (UrsChipidea) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Role-Switch Support Library (UrsCx01000) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Synopsys USB Role-Switch Driver (UrsSynopsys) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft USB Generic Parent Driver (usbccgp) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    eHome Infrared Receiver (USBCIR) (usbcir) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft USB 2.0 Enhanced Host Controller Miniport Driver (usbehci) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft USB Standard Hub Driver (usbhub) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    SuperSpeed Hub (USBHUB3) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft USB Open Host Controller Miniport Driver (usbohci) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft USB PRINTER Class (usbprint) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft USB Serial Driver (usbser) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB Mass Storage Driver (USBSTOR) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft USB Universal Host Controller Miniport Driver (usbuhci) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    USB xHCI Compliant Host Controller (USBXHCI) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Virtual Drive Enumerator (vdrvroot) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    VerifierExt (VerifierExt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    vhdmp (vhdmp) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Virtual HID Framework (VHF) Driver (vhf) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Virtual Machine Bus (vmbus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    VMBusHID (VMBusHID) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Volume Manager Driver (volmgr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Dynamic Volume Manager (volmgrx) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Storage volumes (volsnap) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Hyper-V Virtual PCI Bus (vpci) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    vsmraid (vsmraid) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    VIA StorX Storage RAID Controller Windows Driver (VSTXRAID) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Virtual Wi-Fi Bus Driver (vwifibus) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Virtual WiFi Filter Driver (vwififlt) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Wacom Serial Pen HID Driver (WacomPen) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Access IP ARP Driver (wanarp) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Remote Access IPv6 ARP Driver (wanarpv6) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Defender Boot Driver (WdBoot) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Kernel Mode Driver Frameworks service (Wdf01000) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Defender Mini-Filter Driver (WdFilter) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WDI Driver Framework (wdiwifi) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Defender Network Inspection System Driver (WdNisDrv) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Windows Filtering Platform (WFPLWFS) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WIMMount (WIMMount) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Trusted Execution Environment Class Extension (WindowsTrustedRT) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Windows Trusted Runtime Secure Service (WindowsTrustedRTProxy) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WinMad Service (WinMad) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WinUsb Driver (WINUSB) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WinVerbs Service (WinVerbs) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Microsoft Windows Management Interface for ACPI (WmiAcpi) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Windows Overlay File System Filter Driver (Wof) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Family Safety Filter Driver (wpcfltr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WPD Upper Class Filter Driver (WpdUpFltr) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Winsock IFS Driver (ws2ifsl) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    User Mode Driver Frameworks Platform Driver (WudfPf) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WUDFRd (WUDFRd) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    WUDFWpdFs (WUDFWpdFs) runs the following program as \Driver\WudfRd:
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    Xbox Game Input Protocol Driver (xboxgip) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+    XINPUT HID Filter Driver (xinputhid) runs the following program as :
+    Weak permission on service parent registry key: HKEY_LOCAL_MACHINE\SYSTEM: ALLOW \CREATOR OWNER: WRITE_OWNER WRITE_DAC
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver File Missing
+
+[ description ]
+
+TODO (This issue seems to fail to identify some driver paths on 2003 - but not all. Run "driverquery /v" to get more paths)
+
+TODO:
+
+    Beep (Beep) tries to run '' as
+    exFAT File System Driver (exfat) tries to run '' as
+    FAT12/16/32 File System Driver (fastfat) tries to run '' as
+    Msfs (Msfs) tries to run '' as
+    MsRPC (MsRPC) tries to run '' as
+    Npfs (Npfs) tries to run '' as
+    NTFS (NTFS) tries to run '' as
+    Null (Null) tries to run '' as
+    ReFSv1 (ReFSv1) tries to run '' as
+    Windows Overlay File System Filter Driver (Wof) tries to run '' as
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver Service START
+
+[ description ]
+
+TODO
+
+TODO:
+
+    HTTP Service (HTTP) which runs as has permission granted for: NT AUTHORITY\INTERACTIVE
+    HTTP Service (HTTP) which runs as has permission granted for: NT AUTHORITY\SERVICE
+    HTTP Service (HTTP) which runs as has permission granted for: NT AUTHORITY\BATCH
+    IP Traffic Filter Driver (IpFilterDriver) which runs as has permission granted for: [unknown]\S-1-5-80-611605672-2879557022-2206624263-4029342278-3129212340
+    Multimedia Class Scheduler (MMCSS) which runs as has permission granted for: BUILTIN\Users
+    Multimedia Class Scheduler (MMCSS) which runs as has permission granted for: APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES
+    NetBT (NetBT) which runs as has permission granted for: [unknown]\S-1-5-32-549
+    Remote Desktop Video Miniport Driver (RdpVideoMiniport) which runs as has permission granted for: NT SERVICE\TermService
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: BUILTIN\Users
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: NT AUTHORITY\INTERACTIVE
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: NT AUTHORITY\SERVICE
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: BUILTIN\Users
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: NT AUTHORITY\INTERACTIVE
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: NT AUTHORITY\SERVICE
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: BUILTIN\Users
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: NT AUTHORITY\INTERACTIVE
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: NT AUTHORITY\SERVICE
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: NT SERVICE\WinDefend
+    Family Safety Filter Driver (wpcfltr) which runs as has permission granted for: NT AUTHORITY\INTERACTIVE
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver Service STOP
+
+[ description ]
+
+TODO
+
+TODO:
+
+    IP Traffic Filter Driver (IpFilterDriver) which runs as has permission granted for: [unknown]\S-1-5-80-611605672-2879557022-2206624263-4029342278-3129212340
+    NetBT (NetBT) which runs as has permission granted for: [unknown]\S-1-5-32-549
+    Remote Desktop Video Miniport Driver (RdpVideoMiniport) which runs as has permission granted for: NT SERVICE\TermService
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: NT SERVICE\WinDefend
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver Service PAUSE/CONTINUE
+
+[ description ]
+
+TODO
+
+TODO:
+
+    IP Traffic Filter Driver (IpFilterDriver) which runs as has permission granted for: [unknown]\S-1-5-80-611605672-2879557022-2206624263-4029342278-3129212340
+    NetBT (NetBT) which runs as has permission granted for: [unknown]\S-1-5-32-549
+    NetBT (NetBT) which runs as has permission granted for: NT AUTHORITY\LOCAL SERVICE
+    NetBT (NetBT) which runs as has permission granted for: NT AUTHORITY\NETWORK SERVICE
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: NT SERVICE\WinDefend
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver Registry Key Untrusted User Can Create Sub Keys
+
+[ description ]
+
+TODO
+
+TODO:
+
+    TCP/IP Protocol Driver (Tcpip) uses registry key HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip:
+    HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip: ALLOW NT AUTHORITY\NETWORK SERVICE: KEY_CREATE_SUB_KEY HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip: ALLOW NT SERVICE\Dhcp: KEY_CREATE_SUB_KEY
+    @todo.dll,-100;Microsoft IPv6 Protocol Driver (Tcpip6) uses registry key HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6:
+    HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6: ALLOW NT AUTHORITY\NETWORK SERVICE: KEY_CREATE_SUB_KEY HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip6: ALLOW NT SERVICE\Dhcp: KEY_CREATE_SUB_KEY
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver Service CHANGE_CONFIG
+
+[ description ]
+
+TODO
+
+TODO:
+
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: NT SERVICE\WinDefend
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver Service DELETE
+
+[ description ]
+
+TODO
+
+TODO:
+
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: NT SERVICE\WinDefend
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver Service WRITE_DAC
+
+[ description ]
+
+TODO
+
+TODO:
+
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: NT SERVICE\WinDefend
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Windows Driver Service WRITE_OWNER
+
+[ description ]
+
+TODO
+
+TODO:
+
+    Windows Defender Boot Driver (WdBoot) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Mini-Filter Driver (WdFilter) which runs as has permission granted for: NT SERVICE\WinDefend
+    Windows Defender Network Inspection System Driver (WdNisDrv) which runs as has permission granted for: NT SERVICE\WinDefend
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Scheduled Task Calls Non-Existent Program
+
+[ description ]
+
+A Scheduled Task is configured to run a program that doesn't exist. This is not necessarily a security problem unless the file can be maliciously created. This issue gives false-positives for programs which aren't specified using their full path.
+
+The following tasks were affected:
+
+    Task \Microsoft\Windows\Bluetooth\UninstallDeviceTask runs non-existent file BthUdTask.exe
+    Task \Microsoft\Windows\UPnP\UPnPHostConfig runs non-existent file sc.exe
+    Task \Microsoft\Windows\Windows Defender\Windows Defender Cache Maintenance runs non-existent file C:\Program Files (x86)\Windows Defender\MpCmdRun.exe
+    Task \Microsoft\Windows\Windows Defender\Windows Defender Cleanup runs non-existent file C:\Program Files (x86)\Windows Defender\MpCmdRun.exe
+    Task \Microsoft\Windows\Windows Defender\Windows Defender Scheduled Scan runs non-existent file C:\Program Files (x86)\Windows Defender\MpCmdRun.exe
+    Task \Microsoft\Windows\Windows Defender\Windows Defender Verification runs non-existent file C:\Program Files (x86)\Windows Defender\MpCmdRun.exe
+    Task \Microsoft\Windows\Windows Media Sharing\UpdateLibrary runs non-existent file C:\Program Files (x86)\Windows Media Player\wmpnscfg.exe
+
+[ recommendation ]
+
+Review affected Scheduled Tasks and disabled where approriate.
+
+------------------------------------------------------------------
+Title: Windows Autologon Registry Keys Set
+
+[ description ]
+
+One or more of the registry keys for Windows autologon was found to be set. These can explose locally valid logon credentials in cleartext.
+
+The following information was retreived from the registry:
+
+    Registry key HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon had these values set: AutoAdminLogon=1 DefaultDomainName= DefaultUserName=joegray DefaultPassword=[not set]
+
+[ recommendation ]
+
+Review the information below and determine if is exposes sensitive information. Avoid the use of autologin where possible.
+
+------------------------------------------------------------------
+Title: Network access: Do not allow anonymous enumeration of SAM accounts and shares => disabled
+
+[ description ]
+
+TODO
+
+TODO:
+
+    Reg key: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa\RestrictAnonymous, Value: 0
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Network security: Configure encryption types allowed for Kerberos => weak
+
+[ description ]
+
+Includes DES / CRC or empty. Applies to Win7/2008R2+ only - so will be false positive on earlier OSs.
+
+TODO:
+
+    Reg key: HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\Kerberos\Parameters\SupportedEncryptionTypes, Value: None
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Network security: Restrict NTLM: Outgoing NTLM traffic to remote servers => not Deny All
+
+[ description ]
+
+TODO (This setting applies to XP/2003+)
+
+TODO:
+
+    Reg key: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa\MSV1_0\RestrictSendingNTLMTraffic, Value: None
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Network security: Restrict NTLM: Incoming NTLM traffic => Allow All
+
+[ description ]
+
+TODO (This setting applies to XP/2003+)
+
+TODO:
+
+    Reg key: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa\MSV1_0\RestrictReceivingNTLMTraffic, Value: None
+
+[ recommendation ]
+
+TODO
+
+------------------------------------------------------------------
+Title: Network access: Do not allow storage of passwords and credentials for network authentication => disabled
+
+[ description ]
+
+TODO
+
+TODO:
+
+    Reg key: HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa\disabledomaincreds, Value: None
+
+[ recommendation ]
+
+TODO
+
